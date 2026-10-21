@@ -21,31 +21,20 @@ class JadwalTanam extends Page
     protected static ?int $navigationSort = 3;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
 
-    public ?string $selectedId = null;
+    public ?string $editingId = null;
 
-    // State Edit
     public $editData = [
         'nama_tanaman' => '',
         'lokasi_lahan' => '',
         'tanggal_tanam' => '',
         'catatan' => '',
     ];
-    public bool $isEditing = false;
 
-    public function mount(): void
+    public function editJadwal(string $id): void
     {
-        $firstItem = $this->jadwalList->first();
-        if ($firstItem) {
-            $this->pilih((string) $firstItem->id);
-        }
-    }
-
-    public function pilih(string $id): void
-    {
-        $this->selectedId = $id;
-        $this->isEditing = false;
+        $this->editingId = $id;
+        $item = JadwalTanamModel::find($id);
         
-        $item = $this->selectedJadwal;
         if ($item) {
             $this->editData = [
                 'nama_tanaman' => $item->nama_tanaman,
@@ -56,58 +45,36 @@ class JadwalTanam extends Page
         }
     }
 
-    public function toggleEdit(): void
+    public function batalEdit(): void
     {
-        $this->isEditing = !$this->isEditing;
+        $this->editingId = null;
     }
 
     public function updateJadwal(): void
     {
-        $item = $this->selectedJadwal;
-        if ($item) {
-            $item->update($this->editData);
-            $this->isEditing = false;
+        if ($this->editingId) {
+            $item = JadwalTanamModel::find($this->editingId);
+            if ($item) {
+                $item->update($this->editData);
+            }
+            $this->editingId = null;
         }
     }
 
-    public function hapusJadwal(): void
+    public function hapusJadwal(string $id): void
     {
-        $item = $this->selectedJadwal;
+        $item = JadwalTanamModel::find($id);
         if ($item) {
             $item->delete();
-            $this->selectedId = null;
-            $firstItem = $this->jadwalList->first();
-            if ($firstItem) {
-                $this->pilih((string) $firstItem->id);
-            }
+        }
+        if ($this->editingId === $id) {
+            $this->editingId = null;
         }
     }
 
     public function getJadwalListProperty(): Collection
     {
         return JadwalTanamModel::orderBy('tanggal_tanam', 'desc')->get();
-    }
-
-    public function getSelectedJadwalProperty(): ?JadwalTanamModel
-    {
-        if (!$this->selectedId) {
-            return $this->jadwalList->first();
-        }
-
-        return JadwalTanamModel::find($this->selectedId);
-    }
-
-    public function getJumlahHariTanamProperty(): int
-    {
-        $item = $this->selectedJadwal;
-        if (!$item || !$item->tanggal_tanam) {
-            return 0;
-        }
-
-        $tglTanam = Carbon::parse($item->tanggal_tanam)->startOfDay();
-        $sekarang = Carbon::now()->startOfDay();
-
-        return (int) $tglTanam->diffInDays($sekarang, false);
     }
 
     protected function getHeaderActions(): array
