@@ -6,6 +6,7 @@ use App\Filament\Auth\EditProfile;
 use App\Filament\Auth\LoginPetani;
 use App\Filament\Auth\RegisterPetani;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\JadwalTanam;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -45,6 +46,7 @@ class PetaniPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
+                JadwalTanam::class, 
             ])
             // ->navigationItems([
             //     NavigationItem::make('Profil Saya')
