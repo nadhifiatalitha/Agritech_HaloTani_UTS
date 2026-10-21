@@ -16,50 +16,27 @@ class KirimKeluhan extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
     protected static ?string $navigationLabel = 'Kirim Keluhan';
-     protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 1;
     protected static ?string $title = 'Kirim Keluhan Tanaman';
     protected string $view = 'filament.pages.kirim-keluhan';
 
-    public string $jenisTanaman = 'misalnya padi';
+    public string $jenisTanaman = '';
     public string $lokasiLahan = '';
     public string $urgensi = 'Sedang';
     public string $deskripsi = '';
 
-public function submit()
-{
-    // 1. Tentukan minimal kata berdasarkan urgensi
-    $minWords = match (strtolower($this->urgensi)) {
-        'rendah' => 15,
-        'sedang' => 25,
-        'tinggi' => 50,
-        default  => 15,
-    };
+    public function submit()
+    {
+        // Validasi input sederhana agar tidak kosong
+        $this->validate([
+            'jenisTanaman' => 'required',
+            'lokasiLahan'  => 'required',
+            'deskripsi'    => 'required',
+        ]);
 
-    // 2. Validasi input kosong standar
-    if (empty($this->jenisTanaman) || empty($this->lokasiLahan) || empty($this->deskripsi)) {
-        Notification::make()
-            ->title('Form Belum Lengkap')
-            ->body('Harap isi semua kolom inputan terlebih dahulu.')
-            ->warning()
-            ->send();
-        return;
-    }
-
-    // 3. Hitung kata untuk validasi tantangan dosen
-    $wordCount = count(array_filter(preg_split('/\s+/', trim($this->deskripsi))));
-
-    if ($wordCount < $minWords) {
-        Notification::make()
-            ->title('Deskripsi Kurang Detail')
-            ->body("Untuk urgensi {$this->urgensi}, deskripsi minimal {$minWords} kata. (Saat ini baru {$wordCount} kata)")
-            ->danger()
-            ->send();
-        return; // Stop proses, gak lanjut panggil AI
-    }
-
-    try {
-        // 4. Gabung teks keluhan
-        $teksKeluhanLengkap = "Jenis Tanaman: {$this->jenisTanaman}\nLokasi: {$this->lokasiLahan}\nUrgensi: {$this->urgensi}\nKeluhan: {$this->deskripsi}";
+        try {
+            // 1. Format Teks Keluhan dengan Prefix yang Konsisten untuk Table Parser
+            $teksKeluhanLengkap = "Jenis Tanaman: {$this->jenisTanaman}\nLokasi: {$this->lokasiLahan}\nUrgensi: {$this->urgensi}\nKeluhan: {$this->deskripsi}";
 
         // 5. Panggil AI Service
         $hasilAi = KiraAIService::generateSolusi(
